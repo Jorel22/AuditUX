@@ -15,7 +15,4 @@ Open [http://localhost:8080](http://localhost:8080) with your browser to see the
 
 
 ## Deployment
-The main branch deploys automatically to a free plan of Vercel Platform.
-
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The deployment is automated to a free plan of Vercel Platform.
