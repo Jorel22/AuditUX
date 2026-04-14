@@ -6,10 +6,36 @@ import Image from "next/image";
 export default function Home() {
   const [url, setUrl] = useState("");
   const [submittedUrl, setSubmittedUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmittedUrl(url);
+    setLoading(true);
+    setResult(null);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Ocurrió un error al analizar la URL.");
+      } else {
+        setResult(data.result);
+      }
+    } catch (err: any) {
+      setError(err.message || "Error de red al conectar con el servidor.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -68,17 +94,33 @@ export default function Home() {
 
           {/* Results Output (Plain text for now) */}
           {submittedUrl && (
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
-              <h2 className="text-xl font-bold mb-4">Análisis en progreso (Simulación)</h2>
-              <p className="text-slate-600 mb-2">URL ingresada:</p>
-              <pre className="bg-slate-50 p-4 rounded-lg overflow-x-auto text-sm border border-slate-100 text-slate-800">
-                {JSON.stringify({
-                  url: submittedUrl,
-                  status: "pending",
-                  message: "Se ha recibido la URL. Posteriormente aquí se mostrarán los resultados del análisis detallado de heurísticas de Nielsen en la interfaz completa.",
-                  timestamp: new Date().toISOString()
-                }, null, 2)}
-              </pre>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 w-full">
+              <h2 className="text-xl font-bold mb-4">Resultados del Análisis</h2>
+              <p className="text-slate-600 mb-4">
+                URL ingresada: <span className="font-semibold text-slate-800">{submittedUrl}</span>
+              </p>
+              
+              {loading && (
+                <div className="flex items-center gap-3 text-blue-600 font-medium animate-pulse bg-blue-50 p-4 rounded-lg">
+                  <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Analizando heurísticas de Nielsen con IA, espera un momento...
+                </div>
+              )}
+              
+              {error && (
+                <div className="p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg">
+                  <span className="font-bold">Error:</span> {error}
+                </div>
+              )}
+              
+              {result && (
+                <div className="bg-slate-50 p-6 rounded-lg text-sm border border-slate-200 text-slate-800 whitespace-pre-wrap leading-relaxed shadow-inner">
+                  {result}
+                </div>
+              )}
             </div>
           )}
         </div>
