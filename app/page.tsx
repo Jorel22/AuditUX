@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 
 interface AnalysisData {
@@ -19,11 +19,55 @@ interface AnalysisData {
 }
 
 export default function Home() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passcode, setPasscode] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+
   const [url, setUrl] = useState("");
   const [submittedUrl, setSubmittedUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisData | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const storedPasscode = sessionStorage.getItem("app_passcode");
+    if (storedPasscode) {
+      setPasscode(storedPasscode);
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+    setIsVerifying(true);
+    try {
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passcode }),
+      });
+      if (res.ok) {
+        sessionStorage.setItem("app_passcode", passcode);
+        setIsAuthenticated(true);
+      } else {
+        const data = await res.json();
+        setAuthError(data.error || "Código de acceso incorrecto.");
+      }
+    } catch (err: any) {
+      setAuthError("Error de conexión al verificar el código.");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("app_passcode");
+    setIsAuthenticated(false);
+    setPasscode("");
+    setResult(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,10 +80,16 @@ export default function Home() {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url, passcode }),
       });
 
       const data = await res.json();
+
+      if (res.status === 401) {
+        handleLogout();
+        setError(data.error || "Código de acceso incorrecto. Por favor, ingréselo nuevamente.");
+        return;
+      }
 
       if (!res.ok) {
         setError(data.error || "Ocurrió un error al analizar la URL.");
@@ -52,6 +102,56 @@ export default function Home() {
       setLoading(false);
     }
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#e9eff5] text-slate-900 font-sans flex flex-col items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 w-full max-w-md">
+          <div className="flex items-center gap-2 mb-6 justify-center">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold italic text-xl">
+              U
+            </div>
+            <span className="font-bold text-2xl tracking-tight">AuditUX</span>
+          </div>
+          <h2 className="text-xl font-bold text-center mb-6 text-slate-800">Acceso Restringido</h2>
+          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+            <div>
+              <label htmlFor="passcode" className="block text-sm font-medium text-slate-700 mb-1">
+                Código de Acceso
+              </label>
+              <input
+                id="passcode"
+                type="password"
+                value={passcode}
+                onChange={(e) => setPasscode(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-800"
+                placeholder="Ingresa la clave secreta"
+                required
+              />
+            </div>
+            {authError && <p className="text-red-500 text-sm font-medium text-center">{authError}</p>}
+            <button
+              type="submit"
+              disabled={isVerifying}
+              className="w-full bg-[#0ba5e9] hover:bg-[#0284c7] text-white py-3 rounded-lg font-semibold text-sm uppercase tracking-wide transition-colors flex justify-center items-center gap-2 disabled:opacity-70"
+            >
+              {isVerifying ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Verificando...
+                </>
+              ) : (
+                "Entrar"
+              )}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#e9eff5] text-slate-900 font-sans flex flex-col print:bg-white">

@@ -3,10 +3,24 @@ import { GoogleGenAI } from '@google/genai';
 
 export async function POST(request: Request) {
   try {
-    const { url } = await request.json();
+    const { url, passcode } = await request.json();
+
+    const correctPasscode = process.env.APP_PASSCODE;
+    if (correctPasscode && passcode !== correctPasscode) {
+      return NextResponse.json({ error: 'No autorizado. Código de acceso incorrecto.' }, { status: 401 });
+    }
 
     if (!url) {
       return NextResponse.json({ error: 'La URL es requerida.' }, { status: 400 });
+    }
+
+    try {
+      const parsedUrl = new URL(url);
+      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+        return NextResponse.json({ error: 'Solo se permiten URLs que empiecen con HTTP o HTTPS.' }, { status: 400 });
+      }
+    } catch (e) {
+      return NextResponse.json({ error: 'La URL proporcionada no tiene un formato válido. Evite añadir texto extra.' }, { status: 400 });
     }
 
     if (!process.env.GEMINI_API_KEY) {
