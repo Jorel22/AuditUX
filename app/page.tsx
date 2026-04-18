@@ -54,9 +54,9 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#e9eff5] text-slate-900 font-sans flex flex-col">
+    <div className="min-h-screen bg-[#e9eff5] text-slate-900 font-sans flex flex-col print:bg-white">
       {/* Header mock */}
-      <header className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-md sticky top-0 border-b border-slate-200">
+      <header className="print:hidden flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-md sticky top-0 border-b border-slate-200">
         <div className="flex items-center gap-2">
           {/* Simple logo placeholder */}
           <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold italic">
@@ -71,9 +71,9 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col items-center pt-24 px-4 sm:px-6">
+      <main className="flex-1 flex flex-col items-center pt-24 px-4 sm:px-6 print:pt-0 print:px-0">
         {/* Stepper Mock (Visual only for now) */}
-        <div className="hidden sm:flex items-center gap-4 text-sm font-medium text-slate-500 mb-12">
+        <div className="print:hidden hidden sm:flex items-center gap-4 text-sm font-medium text-slate-500 mb-12">
           <span className="text-slate-900">1. Ingresar URL</span>
           <div className="w-16 h-[1px] bg-slate-300"></div>
           <span>2. Analizar</span>
@@ -81,11 +81,11 @@ export default function Home() {
           <span>3. Resultados</span>
         </div>
 
-        <h1 className="text-3xl sm:text-4xl font-bold mb-8 tracking-tight">
+        <h1 className="print:hidden text-3xl sm:text-4xl font-bold mb-8 tracking-tight">
           INICIAR ANÁLISIS
         </h1>
 
-        <div className="w-full max-w-3xl mb-8">
+        <div className="print:hidden w-full max-w-3xl mb-8">
           {/* Input Form */}
           <form
             onSubmit={handleSubmit}
@@ -128,10 +128,24 @@ export default function Home() {
 
         {/* Dashboard Results */}
         {result && !loading && (
-          <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-8 pb-16">
-            {/* Left Column: Heuristics */}
-            <div className="lg:col-span-2">
-              <h2 className="text-xl font-bold mb-6 text-slate-800">Nielsen's Heuristic Report</h2>
+          <div className="w-full max-w-6xl flex flex-col gap-4 pb-16 print:pb-0">
+            <div className="print:hidden flex justify-end">
+              <button 
+                onClick={() => window.print()} 
+                className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                  <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                </svg>
+                Exportar a PDF
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 bg-[#e9eff5] p-2 rounded-xl print:m-0 print:p-0 print:bg-transparent">
+              {/* Left Column: Heuristics */}
+              <div className="lg:col-span-2">
+                <h2 className="text-xl font-bold mb-6 text-slate-800">Reporte de Heurísticas de Nielsen</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {result.evaluacion_heuristicas.map((h, i) => (
                   <div key={i} className="bg-slate-200/50 backdrop-blur-sm border border-slate-300/50 p-5 rounded-2xl hover:shadow-md transition-shadow">
@@ -195,6 +209,7 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
         )}
       </main>
     </div>
