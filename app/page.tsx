@@ -233,7 +233,7 @@ export default function Home() {
   }
 
   return (
-    <div className="h-screen bg-[#e9eff5] text-slate-900 font-sans flex flex-col print:bg-white overflow-hidden">
+    <div className="h-screen bg-[#e9eff5] text-slate-900 font-sans flex flex-col print:bg-white overflow-hidden print:h-auto print:overflow-visible">
       {/* Header */}
       <header className="print:hidden flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-md z-10 border-b border-slate-200 shrink-0">
         <div className="flex items-center gap-2">
@@ -247,7 +247,7 @@ export default function Home() {
         </button>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden print:overflow-visible">
         {/* Left Sidebar */}
         <aside className="w-72 bg-white border-r border-slate-200 overflow-y-auto hidden md:block print:hidden shadow-sm z-0 relative">
           <div className="p-4">
@@ -286,7 +286,7 @@ export default function Home() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 flex flex-col items-center pt-8 md:pt-12 px-4 sm:px-6 print:pt-0 print:px-0 overflow-y-auto relative pb-20">
+        <main className="flex-1 flex flex-col items-center pt-8 md:pt-12 px-4 sm:px-6 print:pt-0 print:px-0 overflow-y-auto print:overflow-visible relative pb-20 print:pb-0">
           {/* Stepper Mock */}
           <div className="print:hidden hidden sm:flex items-center gap-4 text-sm font-medium text-slate-500 mb-8 md:mb-12">
             <span className="text-slate-900">1. Ingresar URL</span>
