@@ -29,24 +29,29 @@ export async function POST(request: Request) {
 
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-    const prompt = `Actúa como un experto en UX y análisis de interfaces. Tu tarea es analizar la usabilidad y la carga cognitiva de la siguiente URL: ${url}.
+    const prompt = `Actúa como un Auditor Senior de UX/UI. Tu tarea es realizar un análisis profundo de usabilidad y carga cognitiva de la siguiente URL: ${url}.
 
-Debes entregar tu análisis EXCLUSIVAMENTE en formato JSON para que pueda ser procesado por una aplicación web. La estructura debe ser la siguiente:
+Para el análisis de usabilidad, debes basar tu evaluación estrictamente en las Heurísticas de Usabilidad de Jakob Nielsen. Evalúa detalladamente las siguientes 5 heurísticas específicas de Nielsen:
 
 1. evaluacion_heuristicas: Un arreglo de objetos para estas 5 heurísticas:
-   - Relación con el mundo real
-   - Consistencia y estándares
-   - Estética y diseño minimalista
-   - Recuperación de errores
-   - Ayuda y documentación
-   Cada objeto debe incluir: "nombre", "estado" (valores: "pasa", "advertencia", "falla"), "puntuacion" (1-10) y "comentario".
+   - "Relación entre el sistema y el mundo real" (Heurística #2)
+   - "Consistencia y estándares" (Heurística #4)
+   - "Estética y diseño minimalista" (Heurística #8)
+   - "Ayudar a los usuarios a reconocer, diagnosticar y recuperarse de errores" (Heurística #9)
+   - "Ayuda y documentación" (Heurística #10)
+   Profundiza en la evaluación analizando elementos de la interfaz, arquitectura de la información y flujos de usuario presentes en la página.
+   Cada objeto debe incluir exactamente estas claves: 
+   - "nombre": (El nombre exacto de la heurística)
+   - "estado": (valores limitados a: "pasa", "advertencia", "falla")
+   - "puntuacion": (número del 1 al 10)
+   - "comentario": (Un análisis crítico, profundo y accionable justificando rigurosamente la evaluación)
 
-2. carga_cognitiva: Un objeto que contenga:
-   - nivel_esfuerzo: Un valor numérico del 1 al 100 (donde 100 es carga máxima).
-   - semaforo: Un valor de texto ("bajo", "medio", "alto") basado en el nivel de esfuerzo.
-   - factores: Una lista de 3 razones técnicas que justifican ese nivel.
+2. carga_cognitiva: Un objeto que contenga exactamente estas claves:
+   - "nivel_esfuerzo": Un valor numérico del 1 al 100 (buscando identificar carga cognitiva intrínseca, extrínseca y germana).
+   - "semaforo": Un valor de texto limitado a ("bajo", "medio", "alto") según el nivel de esfuerzo.
+   - "factores": Una lista de 3 razones técnicas detalladas (Considerando la Ley de Hick, densidad de información o complejidad visual) que justifican el nivel de carga.
 
-3. puntaje_global: Un número entero del 1 al 100.
+3. puntaje_global: Un número entero del 1 al 100 reflejando la madurez general de la interfaz evaluada.
 
 IMPORTANTE: No añadas texto introductorio ni explicaciones fuera del bloque JSON.`;
 
@@ -70,9 +75,22 @@ IMPORTANTE: No añadas texto introductorio ni explicaciones fuera del bloque JSO
     return NextResponse.json({ result: resultData });
   } catch (error: any) {
     console.error('Error al llamar a Gemini:', error);
+    
+    let errorMessage = 'Ocurrió un error en el análisis con el LLM.';
+    let statusCode = 500;
+    const errorStr = typeof error?.message === 'string' ? error.message : JSON.stringify(error);
+
+    if (errorStr.includes('503') || error?.status === 503) {
+      errorMessage = 'Los servidores de Gemini (IA) están experimentando intermitencias o alta demanda (Error 503). El problema no es de la aplicación. Por favor, intenta nuevamente en unos momentos.';
+      statusCode = 503;
+    } else if (errorStr.includes('429') || error?.status === 429) {
+      errorMessage = 'Se alcanzó el límite rápido de peticiones gratuitas de Gemini (Error 429). Por favor, espera alrededor de 30 segundos y vuelve a hacer clic en Ejecutar Evaluación.';
+      statusCode = 429;
+    }
+
     return NextResponse.json(
-      { error: 'Ocurrió un error en el análisis con el LLM.', details: error.message },
-      { status: 500 }
+      { error: errorMessage, details: errorStr },
+      { status: statusCode }
     );
   }
 }
