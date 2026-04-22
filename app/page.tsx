@@ -369,7 +369,9 @@ export default function Home() {
                     <div key={i} className="bg-slate-200/50 backdrop-blur-sm border border-slate-300/50 p-5 rounded-2xl hover:shadow-md transition-shadow">
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="font-bold text-slate-800 text-sm leading-tight pr-4">{h.nombre}</h3>
-                        <span className={`flex-shrink-0 w-3 h-3 rounded-full ${h.estado === 'pasa' ? 'bg-green-500' : h.estado === 'advertencia' ? 'bg-yellow-500' : 'bg-red-500'}`} title={h.estado}></span>
+                        <svg className="flex-shrink-0 w-3 h-3" viewBox="0 0 12 12" title={h.estado}>
+                          <circle cx="6" cy="6" r="6" className={`fill-current ${h.estado === 'pasa' ? 'text-green-500' : h.estado === 'advertencia' ? 'text-yellow-500' : 'text-red-500'}`} />
+                        </svg>
                       </div>
                       <p className="text-slate-600 text-xs leading-relaxed">
                         {h.comentario}
@@ -415,12 +417,15 @@ export default function Home() {
                   <div className="w-full bg-slate-50 rounded-xl p-4 border border-slate-100 flex flex-col gap-3">
                     <div className="flex justify-between items-end">
                       <span className="font-semibold text-sm text-slate-700">Carga Cognitiva</span>
-                      <span className={`text-xs font-bold px-2 py-1 rounded ${result.carga_cognitiva.semaforo === 'bajo' ? 'bg-green-100 text-green-700' : result.carga_cognitiva.semaforo === 'medio' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'} uppercase tracking-wide`}>
+                      <span className={`text-xs font-bold px-2 py-1 rounded border ${result.carga_cognitiva.semaforo === 'bajo' ? 'border-green-200 text-green-700' : result.carga_cognitiva.semaforo === 'medio' ? 'border-orange-200 text-orange-700' : 'border-red-200 text-red-700'} uppercase tracking-wide`}>
                         {result.carga_cognitiva.semaforo === 'bajo' ? 'Baja' : result.carga_cognitiva.semaforo === 'medio' ? 'Media' : 'Alta'}
                       </span>
                     </div>
-                    <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden flex">
-                      <div className={`h-full transition-all duration-1000 ease-out ${result.carga_cognitiva.semaforo === 'bajo' ? 'bg-green-500' : result.carga_cognitiva.semaforo === 'medio' ? 'bg-orange-400' : 'bg-red-500'}`} style={{ width: `${result.carga_cognitiva.nivel_esfuerzo}%` }}></div>
+                    <div className="w-full h-3 rounded-full overflow-hidden flex">
+                      <svg className="w-full h-full rounded-full" preserveAspectRatio="none">
+                        <rect width="100%" height="100%" className="fill-slate-200" />
+                        <rect width={`${result.carga_cognitiva.nivel_esfuerzo}%`} height="100%" className={`fill-current transition-all duration-1000 ease-out ${result.carga_cognitiva.semaforo === 'bajo' ? 'text-green-500' : result.carga_cognitiva.semaforo === 'medio' ? 'text-orange-400' : 'text-red-500'}`} />
+                      </svg>
                     </div>
                     {result.carga_cognitiva.factores && (
                        <ul className="text-xs text-slate-600 mt-2 list-disc pl-4 space-y-1">
