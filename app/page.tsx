@@ -369,7 +369,8 @@ export default function Home() {
                     <div key={i} className="bg-slate-200/50 backdrop-blur-sm border border-slate-300/50 p-5 rounded-2xl hover:shadow-md transition-shadow">
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="font-bold text-slate-800 text-sm leading-tight pr-4">{h.nombre}</h3>
-                        <svg className="flex-shrink-0 w-3 h-3" viewBox="0 0 12 12" title={h.estado}>
+                        <svg className="flex-shrink-0 w-3 h-3" viewBox="0 0 12 12">
+                          <title>{h.estado}</title>
                           <circle cx="6" cy="6" r="6" className={`fill-current ${h.estado === 'pasa' ? 'text-green-500' : h.estado === 'advertencia' ? 'text-yellow-500' : 'text-red-500'}`} />
                         </svg>
                       </div>
