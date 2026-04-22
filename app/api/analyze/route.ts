@@ -2,7 +2,57 @@ import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import clientPromise from '@/lib/mongodb';
 
+const MAX_RETRIES = 3;
+const BASE_DELAY_MS = 1000;
+
+async function generateContentWithRetry(ai: GoogleGenAI, prompt: string, model: string, requestId: string, attempt = 1): Promise<any> {
+  const startTime = performance.now();
+  try {
+    const response = await ai.models.generateContent({
+      model: model,
+      contents: prompt,
+    });
+    const duration = Math.round(performance.now() - startTime);
+    console.log(`[OK] Gemini Request ${requestId} | Modelo: ${model} | Intento: ${attempt} | Duración: ${duration}ms`);
+    return response;
+  } catch (error: any) {
+    const duration = Math.round(performance.now() - startTime);
+    const errorStr = typeof error?.message === 'string' ? error.message : JSON.stringify(error);
+    const status = error?.status || 'UNKNOWN';
+    
+    // Log detallado del error
+    console.error(`[ERROR] Gemini Request ${requestId} | Status: ${status} | Modelo: ${model} | Intento: ${attempt} | Duración: ${duration}ms`);
+    console.error(`[ERROR BODY] ${requestId}:`, errorStr);
+    
+    // Si la librería expone headers, intentar extraer Retry-After
+    if (error?.response?.headers) {
+      const retryAfter = error.response.headers.get?.('retry-after') || error.response.headers['retry-after'];
+      if (retryAfter) console.error(`[HEADERS] ${requestId} Retry-After: ${retryAfter}`);
+    }
+
+    const isTransientError = errorStr.includes('503') || status === 503;
+    
+    if (isTransientError && attempt <= MAX_RETRIES) {
+      const delay = BASE_DELAY_MS * Math.pow(2, attempt - 1);
+      const jitter = Math.floor(Math.random() * 500); // Jitter aleatorio
+      const waitTime = delay + jitter;
+      
+      console.warn(`[RETRY] ${requestId} - Error 503 en Gemini. Reintentando en ${waitTime}ms...`);
+      
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+      
+      return generateContentWithRetry(ai, prompt, model, requestId, attempt + 1);
+    }
+    
+    throw error;
+  }
+}
+
 export async function POST(request: Request) {
+  const requestId = crypto.randomUUID();
+  const reqStartTime = performance.now();
+  console.log(`\n--- NUEVO REQUEST [${requestId}] --- Fecha: ${new Date().toISOString()}`);
+
   try {
     const { url, passcode } = await request.json();
 
@@ -56,10 +106,13 @@ Para el análisis de usabilidad, debes basar tu evaluación estrictamente en las
 
 IMPORTANTE: No añadas texto introductorio ni explicaciones fuera del bloque JSON.`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-    });
+    const GEMINI_MODEL = 'gemini-2.5-flash'; // Revertido al modelo original de tu proyecto
+    console.log(`[INFO] ${requestId} | Preparando prompt. Modelo seleccionado: ${GEMINI_MODEL}`);
+    
+    const estimatedTokens = Math.round(prompt.length / 4);
+    console.log(`[INFO] ${requestId} | Tamaño del prompt: ${prompt.length} caracteres (~${estimatedTokens} tokens)`);
+
+    const response = await generateContentWithRetry(ai, prompt, GEMINI_MODEL, requestId);
 
     const text = response.text || '';
     // Limpiar posibles bloques de código markdown
@@ -92,18 +145,25 @@ IMPORTANTE: No añadas texto introductorio ni explicaciones fuera del bloque JSO
 
     return NextResponse.json({ result: resultData });
   } catch (error: any) {
-    console.error('Error al llamar a Gemini:', error);
+    const totalDuration = Math.round(performance.now() - reqStartTime);
+    console.error(`[FATAL] ${requestId} | Petición falló globalmente tras ${totalDuration}ms.`);
     
     let errorMessage = 'Ocurrió un error en el análisis con el LLM.';
     let statusCode = 500;
     const errorStr = typeof error?.message === 'string' ? error.message : JSON.stringify(error);
 
     if (errorStr.includes('503') || error?.status === 503) {
-      errorMessage = 'Los servidores de Gemini (IA) están experimentando intermitencias o alta demanda (Error 503). El problema no es de la aplicación. Por favor, intenta nuevamente en unos momentos.';
+      console.error(`[LOG 503] ${requestId} | Error de sobrecarga de Gemini (503).`);
+      errorMessage = 'Los servidores de IA están temporalmente ocupados. Intenta nuevamente en unos momentos.';
       statusCode = 503;
     } else if (errorStr.includes('429') || error?.status === 429) {
-      errorMessage = 'Se alcanzó el límite rápido de peticiones gratuitas de Gemini (Error 429). Por favor, espera alrededor de 30 segundos y vuelve a hacer clic en Ejecutar Evaluación.';
+      console.error(`[LOG 429] ${requestId} | Rate Limit Exceeded (429). Posibles causas: cuota agotada, límite RPM/TPM, o concurrencia.`);
+      errorMessage = 'Se ha excedido la cuota de uso de Inteligencia Artificial. Esto puede deberse al límite de peticiones por minuto, de tokens, o a que se alcanzó la cuota diaria del modelo. Espera unos minutos y vuelve a intentarlo.';
       statusCode = 429;
+    } else {
+      console.error(`[LOG 4xx/5xx] ${requestId} | Error no recuperable: ${errorStr}`);
+      // MODIFICACIÓN TEMPORAL PARA DIAGNÓSTICO: Agregar el error crudo al mensaje de UI para poder verlo
+      errorMessage = `Ocurrió un error en el análisis con el LLM. Detalles técnicos: ${errorStr}`;
     }
 
     return NextResponse.json(
