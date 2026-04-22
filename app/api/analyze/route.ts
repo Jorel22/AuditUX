@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
+import clientPromise from '@/lib/mongodb';
 
 export async function POST(request: Request) {
   try {
@@ -67,6 +68,23 @@ IMPORTANTE: No añadas texto introductorio ni explicaciones fuera del bloque JSO
     let resultData;
     try {
       resultData = JSON.parse(cleanedText);
+      
+      // Guardar en la base de datos
+      try {
+        const client = await clientPromise;
+        const db = client.db('proyectoauditux');
+        const collection = db.collection('auditorias');
+        
+        await collection.insertOne({
+          url,
+          result: resultData,
+          createdAt: new Date()
+        });
+      } catch (dbError) {
+        console.error('Error al guardar en MongoDB:', dbError);
+        // Continuamos de todos modos para retornar el resultado al cliente
+      }
+      
     } catch (e) {
       console.error('Failed to parse JSON from Gemini:', cleanedText);
       return NextResponse.json({ error: 'El modelo no devolvió un JSON válido.' }, { status: 500 });
