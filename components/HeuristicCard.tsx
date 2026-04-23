@@ -15,7 +15,7 @@ export function HeuristicCard({ h }: { h: any }) {
       <div className="flex items-start justify-between mb-4 gap-3">
         <h3 className="font-bold text-slate-800 text-sm leading-snug">{h.nombre}</h3>
         <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border ${badgeConfig.color} flex-shrink-0 uppercase tracking-widest`}>
-          {badgeConfig.text}
+          {badgeConfig.text} • {h.puntuacion * 10}/100
         </span>
       </div>
       <div className={`text-slate-600 text-sm leading-relaxed flex-grow print:line-clamp-none print:overflow-visible ${expanded ? '' : 'line-clamp-3'} overflow-hidden`}>
