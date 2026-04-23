@@ -1,7 +1,7 @@
 export interface AnalysisData {
   evaluacion_heuristicas: {
     nombre: string;
-    estado: "pasa" | "advertencia" | "falla";
+    estado?: "pasa" | "advertencia" | "falla";
     puntuacion: number;
     comentario: string;
   }[];

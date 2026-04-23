@@ -20,12 +20,15 @@ export function FactorCard({ factorStr, semaforo, onOpen }: { factorStr: string,
         </svg>
         <h4 className="font-bold text-slate-800 text-xs truncate" title={title}>{title}</h4>
       </div>
-      <ul className="list-disc list-inside text-slate-600 text-[11px] space-y-1 line-clamp-3 overflow-hidden ml-1">
+      <ul className="print:hidden list-disc list-inside text-slate-600 text-[11px] space-y-1 line-clamp-3 overflow-hidden ml-1">
         {sentences.map((s, i) => <li key={i} className="truncate">{s}</li>)}
       </ul>
+      <div className="hidden print:block text-slate-600 text-[11px] ml-1 mt-1">
+        {desc}
+      </div>
       <button
         onClick={() => onOpen({ title, original: factorStr, semaforo })}
-        className="text-[#0ba5e9] hover:text-[#0284c7] text-[10px] font-semibold mt-1 text-left flex items-center gap-1 transition-colors w-fit"
+        className="print:hidden text-[#0ba5e9] hover:text-[#0284c7] text-[10px] font-semibold mt-1 text-left flex items-center gap-1 transition-colors w-fit"
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
         Ver análisis completo

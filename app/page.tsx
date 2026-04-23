@@ -367,14 +367,16 @@ export default function Home() {
           {/* Dashboard Results */}
           {result && !loading && (
             <div className="w-full max-w-5xl flex flex-col gap-4 print:pb-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="print:hidden flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200 mb-2">
-                <span className="text-slate-500 font-medium text-sm flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" /><path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.247 1.856a.5.5 0 0 1-.494.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5z" /></svg>
-                  Resultados para: <span className="text-slate-800 font-bold">{submittedUrl}</span>
+              <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200 mb-2 print:border-none print:bg-transparent print:p-0 print:mb-6">
+                <span className="text-slate-500 font-medium text-sm flex flex-wrap items-center gap-2 print:text-slate-800">
+                  <svg className="print:hidden shrink-0" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" /><path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.247 1.856a.5.5 0 0 1-.494.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5z" /></svg>
+                  <span className="print:hidden">Resultados para:</span>
+                  <span className="hidden print:inline font-bold uppercase tracking-widest text-xs text-slate-400">Reporte de Auditoría UX:</span>
+                  <span className="text-slate-800 font-bold print:text-blue-600 print:text-xl">{submittedUrl}</span>
                 </span>
                 <button
                   onClick={() => window.print()}
-                  className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors flex items-center gap-2"
+                  className="print:hidden bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors flex items-center gap-2 shrink-0"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />

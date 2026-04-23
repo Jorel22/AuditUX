@@ -93,7 +93,6 @@ Para el análisis de usabilidad, debes basar tu evaluación estrictamente en las
    Profundiza en la evaluación analizando elementos de la interfaz, arquitectura de la información y flujos de usuario presentes en la página.
    Cada objeto debe incluir exactamente estas claves: 
    - "nombre": (El nombre exacto de la heurística)
-   - "estado": (valores limitados a: "pasa", "advertencia", "falla")
    - "puntuacion": (número del 1 al 10)
    - "comentario": (Un análisis crítico, profundo y accionable justificando rigurosamente la evaluación)
 
