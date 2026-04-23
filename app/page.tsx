@@ -25,33 +25,7 @@ interface HistoryItem {
   createdAt: string;
 }
 
-const nielsenKeywords = [
-  { name: "Visibilidad del estado del sistema", keys: ["visibilidad", "estado"] },
-  { name: "Relación entre el sistema y el mundo real", keys: ["mundo", "real"] },
-  { name: "Control y libertad del usuario", keys: ["control", "libertad"] },
-  { name: "Consistencia y estándares", keys: ["consistencia", "estándar", "estándares"] },
-  { name: "Prevención de errores", keys: ["prevención"] },
-  { name: "Reconocimiento antes que recuerdo", keys: ["reconocimiento", "recuerdo"] },
-  { name: "Flexibilidad y eficiencia de uso", keys: ["flexibilidad", "eficiencia"] },
-  { name: "Estética y diseño minimalista", keys: ["estética", "minimalista"] },
-  { name: "Ayudar a los usuarios a reconocer, diagnosticar y recuperarse de errores", keys: ["diagnosticar", "recuperarse", "reconocer", "diagnóstico"] },
-  { name: "Ayuda y documentación", keys: ["documentación", "ayuda"] }
-];
 
-const getCompleteHeuristics = (provided: any[]) => {
-  const missing = nielsenKeywords.filter(nk => {
-    return !provided.some(p => {
-      const pName = p.nombre.toLowerCase();
-      return nk.keys.some(k => pName.includes(k));
-    });
-  }).map(nk => ({
-    nombre: nk.name,
-    estado: 'pasa',
-    comentario: 'No se detectaron problemas críticos en esta evaluación inicial.'
-  }));
-
-  return [...provided, ...missing];
-};
 
 function HeuristicCard({ h }: { h: any }) {
   const [expanded, setExpanded] = useState(false);
@@ -89,7 +63,7 @@ function FactorCard({ factorStr, semaforo, onOpen }: { factorStr: string, semafo
   const match = factorStr.match(/^(?:\*\*)?(.*?)(?:\*\*)?:\s*(.*)$/);
   const title = match ? match[1].replace(/\*\*/g, '').trim() : "Factor detectado";
   const desc = match ? match[2].trim() : factorStr.trim();
-  
+
   const sentences = desc.split(/(?<=\.)\s+/).filter(Boolean).slice(0, 3);
   if (sentences.length === 0) sentences.push(desc);
 
@@ -136,7 +110,7 @@ export default function Home() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [pendingUrl, setPendingUrl] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [selectedFactor, setSelectedFactor] = useState<{title: string, original: string, semaforo: string} | null>(null);
+  const [selectedFactor, setSelectedFactor] = useState<{ title: string, original: string, semaforo: string } | null>(null);
 
   useEffect(() => {
     const storedPasscode = sessionStorage.getItem("app_passcode");
@@ -296,7 +270,7 @@ export default function Home() {
 
   if (result) {
     cCog = Math.max(0, 100 - (result.carga_cognitiva?.nivel_esfuerzo || 0));
-    
+
     const heurs = result.evaluacion_heuristicas || [];
     let sum = 0;
     heurs.forEach(h => sum += (h.puntuacion || 0));
@@ -305,7 +279,7 @@ export default function Home() {
     const hCon = heurs.find(h => h.nombre.toLowerCase().includes('consistencia'));
     cCon = hCon ? (hCon.puntuacion || 0) * 10 : cHeu;
 
-    cNav = result.puntaje_global || 0; 
+    cNav = result.puntaje_global || 0;
 
     pCog = Math.round(cCog * 0.30);
     pHeu = Math.round(cHeu * 0.40);
@@ -523,7 +497,7 @@ export default function Home() {
                   {/* Detalles del Puntaje Widget */}
                   <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col">
                     <h2 className="text-sm font-bold text-slate-600 uppercase tracking-wider mb-2 text-center">¿Cómo se calculó este puntaje?</h2>
-                    
+
                     <div className="bg-slate-50 p-3 rounded-lg mb-4 text-center border border-slate-100">
                       <p className="text-xs font-semibold text-slate-700 mb-1">Fórmula Matemática</p>
                       <p className="text-[10px] text-slate-500 font-mono">PG = (C_Cog × 0.3) + (C_Heu × 0.4) + (C_Con × 0.2) + (C_Nav × 0.1)</p>
@@ -556,7 +530,7 @@ export default function Home() {
                           </div>
                         );
                       })}
-                      
+
                       <div className="pt-4 border-t border-slate-200 flex justify-between items-center mt-1">
                         <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Total Global</span>
                         <span className="text-lg font-black text-blue-600">{finalCalculatedScore} pts</span>
@@ -607,7 +581,7 @@ export default function Home() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                    {getCompleteHeuristics(result.evaluacion_heuristicas).map((h, i) => (
+                    {result.evaluacion_heuristicas.map((h, i) => (
                       <HeuristicCard key={i} h={h} />
                     ))}
                   </div>
@@ -663,11 +637,10 @@ export default function Home() {
       {selectedFactor && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 relative flex flex-col max-h-[90vh]">
-            <div className={`p-4 border-b flex justify-between items-center ${
-              selectedFactor.semaforo === 'bajo' ? 'bg-green-50 border-green-100' :
-              selectedFactor.semaforo === 'medio' ? 'bg-yellow-50 border-yellow-100' :
-              'bg-red-50 border-red-100'
-            }`}>
+            <div className={`p-4 border-b flex justify-between items-center ${selectedFactor.semaforo === 'bajo' ? 'bg-green-50 border-green-100' :
+                selectedFactor.semaforo === 'medio' ? 'bg-yellow-50 border-yellow-100' :
+                  'bg-red-50 border-red-100'
+              }`}>
               <h3 className="text-lg font-bold text-slate-800 pr-8 leading-tight">Análisis Detallado: {selectedFactor.title}</h3>
               <button
                 onClick={() => setSelectedFactor(null)}
