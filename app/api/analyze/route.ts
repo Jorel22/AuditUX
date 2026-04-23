@@ -102,7 +102,10 @@ Para el análisis de usabilidad, debes basar tu evaluación estrictamente en las
    - "semaforo": Un valor de texto limitado a ("bajo", "medio", "alto") según el nivel de esfuerzo.
    - "factores": Una lista de 3 razones técnicas detalladas (Considerando la Ley de Hick, densidad de información o complejidad visual) que justifican el nivel de carga.
 
-3. puntaje_global: Un número entero del 1 al 100 reflejando la madurez general de la interfaz evaluada.
+3. puntajes_categorias: Un objeto que contenga exactamente esta clave:
+   - "heuristicas": Un valor numérico del 1 al 100 que resume la evaluación global de usabilidad según las heurísticas de Nielsen.
+
+4. puntaje_global: Un número entero del 1 al 100 calculando la madurez de la interfaz en base a las heurísticas y el nivel de esfuerzo (donde menor esfuerzo equivale a mayor puntaje).
 
 IMPORTANTE: No añadas texto introductorio ni explicaciones fuera del bloque JSON.`;
 

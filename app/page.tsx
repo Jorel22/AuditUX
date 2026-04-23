@@ -15,6 +15,10 @@ interface AnalysisData {
     semaforo: "bajo" | "medio" | "alto";
     factores: string[];
   };
+  puntajes_categorias?: {
+    heuristicas: number;
+    carga_cognitiva?: number;
+  };
   puntaje_global: number;
 }
 
@@ -264,29 +268,26 @@ export default function Home() {
     return acc;
   }, {} as Record<string, HistoryItem[]>);
 
-  let cCog = 0, cHeu = 0, cCon = 0, cNav = 0;
-  let pCog = 0, pHeu = 0, pCon = 0, pNav = 0;
+  let cCog = 0, cHeu = 0;
+  let pCog = 0, pHeu = 0;
   let finalCalculatedScore = 0;
 
   if (result) {
     cCog = Math.max(0, 100 - (result.carga_cognitiva?.nivel_esfuerzo || 0));
 
-    const heurs = result.evaluacion_heuristicas || [];
-    let sum = 0;
-    heurs.forEach(h => sum += (h.puntuacion || 0));
-    cHeu = heurs.length > 0 ? Math.round((sum / heurs.length) * 10) : 0;
+    if (result.puntajes_categorias) {
+      cHeu = result.puntajes_categorias.heuristicas;
+    } else {
+      const heurs = result.evaluacion_heuristicas || [];
+      let sum = 0;
+      heurs.forEach(h => sum += (h.puntuacion || 0));
+      cHeu = heurs.length > 0 ? Math.round((sum / heurs.length) * 10) : 0;
+    }
 
-    const hCon = heurs.find(h => h.nombre.toLowerCase().includes('consistencia'));
-    cCon = hCon ? (hCon.puntuacion || 0) * 10 : cHeu;
+    pCog = Math.round(cCog * 0.50);
+    pHeu = Math.round(cHeu * 0.50);
 
-    cNav = result.puntaje_global || 0;
-
-    pCog = Math.round(cCog * 0.30);
-    pHeu = Math.round(cHeu * 0.40);
-    pCon = Math.round(cCon * 0.20);
-    pNav = Math.round(cNav * 0.10);
-
-    finalCalculatedScore = pCog + pHeu + pCon + pNav;
+    finalCalculatedScore = result.puntaje_global || (pCog + pHeu);
   }
 
   if (!isAuthenticated) {
@@ -500,29 +501,21 @@ export default function Home() {
 
                     <div className="bg-slate-50 p-3 rounded-lg mb-4 text-center border border-slate-100">
                       <p className="text-xs font-semibold text-slate-700 mb-1">Fórmula Matemática</p>
-                      <p className="text-[10px] text-slate-500 font-mono">PG = (C_Cog × 0.3) + (C_Heu × 0.4) + (C_Con × 0.2) + (C_Nav × 0.1)</p>
-                      <p className="text-[10px] text-slate-400 mt-1 italic">Puntos = Calificación × Peso</p>
+                      <p className="text-[10px] text-slate-500 font-mono">PG = (Carga Cognitiva × 0.5) + (Heurísticas × 0.5)</p>
                     </div>
 
                     <div className="flex flex-col gap-5 mt-2">
                       {[
-                        { name: "Cognitive Load", score: cCog, weight: "30%", points: pCog },
-                        { name: "Heurísticas", score: cHeu, weight: "40%", points: pHeu },
-                        { name: "Consistencia", score: cCon, weight: "20%", points: pCon },
-                        { name: "Navegación", score: cNav, weight: "10%", points: pNav }
+                        { name: "Facilidad Cognitiva", score: cCog, weight: "50%", points: pCog },
+                        { name: "Heurísticas", score: cHeu, weight: "50%", points: pHeu }
                       ].map((item, i) => {
                         const barColor = item.score >= 80 ? 'bg-green-500' : item.score >= 50 ? 'bg-yellow-500' : 'bg-red-500';
                         const textColor = item.score >= 80 ? 'text-green-600' : item.score >= 50 ? 'text-yellow-600' : 'text-red-600';
                         return (
-                          <div key={i} className="flex flex-col gap-2">
-                            <div className="flex justify-between items-end">
-                              <div className="flex flex-col">
-                                <span className="text-xs font-bold text-slate-700">{item.name}</span>
-                                <span className="text-[10px] text-slate-500 mt-0.5">
-                                  Calif: <span className={`font-semibold ${textColor}`}>{item.score}</span> <span className="text-slate-300 mx-1">|</span> Peso: <span className="font-medium text-slate-600">{item.weight}</span>
-                                </span>
-                              </div>
-                              <span className="text-xs font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md">+{item.points} pts</span>
+                          <div key={i} className="flex flex-col gap-1.5">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs font-bold text-slate-700">{item.name}</span>
+                              <span className={`text-xs font-bold ${textColor}`}>{item.score} <span className="text-slate-400 font-medium">/ 100</span></span>
                             </div>
                             <div className="w-full bg-slate-100 rounded-full h-2 shadow-inner overflow-hidden">
                               <div className={`h-full rounded-full transition-all duration-1000 ${barColor}`} style={{ width: `${item.score}%` }}></div>
@@ -638,8 +631,8 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 relative flex flex-col max-h-[90vh]">
             <div className={`p-4 border-b flex justify-between items-center ${selectedFactor.semaforo === 'bajo' ? 'bg-green-50 border-green-100' :
-                selectedFactor.semaforo === 'medio' ? 'bg-yellow-50 border-yellow-100' :
-                  'bg-red-50 border-red-100'
+              selectedFactor.semaforo === 'medio' ? 'bg-yellow-50 border-yellow-100' :
+                'bg-red-50 border-red-100'
               }`}>
               <h3 className="text-lg font-bold text-slate-800 pr-8 leading-tight">Análisis Detallado: {selectedFactor.title}</h3>
               <button
