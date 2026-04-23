@@ -2,102 +2,11 @@
 import AuditUXLogo from '../components/AuditUXLogo';
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { fetchHistoryApi, authApi, analyzeApi } from '@/lib/api';
 
-interface AnalysisData {
-  evaluacion_heuristicas: {
-    nombre: string;
-    estado: "pasa" | "advertencia" | "falla";
-    puntuacion: number;
-    comentario: string;
-  }[];
-  carga_cognitiva: {
-    nivel_esfuerzo: number;
-    semaforo: "bajo" | "medio" | "alto";
-    factores: string[];
-  };
-  puntajes_categorias?: {
-    heuristicas: number;
-    carga_cognitiva?: number;
-  };
-  puntaje_global: number;
-}
-
-interface HistoryItem {
-  _id: string;
-  url: string;
-  result: AnalysisData;
-  createdAt: string;
-}
-
-
-
-function HeuristicCard({ h }: { h: any }) {
-  const [expanded, setExpanded] = useState(false);
-  const badgeConfig =
-    h.estado === 'pasa' ? { color: 'bg-green-50 text-green-700 border-green-200', text: 'Cumple' } :
-      h.estado === 'advertencia' ? { color: 'bg-orange-50 text-orange-700 border-orange-200', text: 'Advertencia' } :
-        { color: 'bg-red-50 text-red-700 border-red-200', text: 'Falla' };
-
-  return (
-    <div className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
-      <div className="flex items-start justify-between mb-4 gap-3">
-        <h3 className="font-bold text-slate-800 text-sm leading-snug">{h.nombre}</h3>
-        <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border ${badgeConfig.color} flex-shrink-0 uppercase tracking-widest`}>
-          {badgeConfig.text}
-        </span>
-      </div>
-      <div className={`text-slate-600 text-sm leading-relaxed flex-grow ${expanded ? '' : 'line-clamp-3'} overflow-hidden`}>
-        {h.comentario}
-      </div>
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="text-[#0ba5e9] hover:text-[#0284c7] text-xs font-semibold mt-4 text-left w-fit transition-colors flex items-center gap-1"
-      >
-        {expanded ? (
-          <><svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg> Ver menos</>
-        ) : (
-          <><svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg> Ver análisis completo</>
-        )}
-      </button>
-    </div>
-  );
-}
-
-function FactorCard({ factorStr, semaforo, onOpen }: { factorStr: string, semaforo: string, onOpen: (parsed: any) => void }) {
-  const match = factorStr.match(/^(?:\*\*)?(.*?)(?:\*\*)?:\s*(.*)$/);
-  const title = match ? match[1].replace(/\*\*/g, '').trim() : "Factor detectado";
-  const desc = match ? match[2].trim() : factorStr.trim();
-
-  const sentences = desc.split(/(?<=\.)\s+/).filter(Boolean).slice(0, 3);
-  if (sentences.length === 0) sentences.push(desc);
-
-  const isBajo = semaforo === 'bajo';
-  const isMedio = semaforo === 'medio';
-  const iconColor = isBajo ? 'text-green-500' : isMedio ? 'text-yellow-500' : 'text-red-500';
-  const borderColor = isBajo ? 'border-green-200' : isMedio ? 'border-yellow-200' : 'border-red-200';
-  const bgColor = isBajo ? 'bg-green-50' : isMedio ? 'bg-yellow-50' : 'bg-red-50';
-
-  return (
-    <div className={`flex flex-col gap-2 p-3 rounded-xl border shadow-sm ${bgColor} ${borderColor}`}>
-      <div className="flex items-center gap-2">
-        <svg className={`w-4 h-4 flex-shrink-0 ${iconColor}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
-        <h4 className="font-bold text-slate-800 text-xs truncate" title={title}>{title}</h4>
-      </div>
-      <ul className="list-disc list-inside text-slate-600 text-[11px] space-y-1 line-clamp-3 overflow-hidden ml-1">
-        {sentences.map((s, i) => <li key={i} className="truncate">{s}</li>)}
-      </ul>
-      <button
-        onClick={() => onOpen({ title, original: factorStr, semaforo })}
-        className="text-[#0ba5e9] hover:text-[#0284c7] text-[10px] font-semibold mt-1 text-left flex items-center gap-1 transition-colors w-fit"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-        Ver análisis completo
-      </button>
-    </div>
-  );
-}
+import { AnalysisData, HistoryItem } from '@/types';
+import { HeuristicCard } from '../components/HeuristicCard';
+import { FactorCard } from '../components/FactorCard';
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -133,11 +42,7 @@ export default function Home() {
   const fetchHistory = async () => {
     try {
       const p = passcode || sessionStorage.getItem("app_passcode");
-      const res = await fetch("/api/history", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ passcode: p }),
-      });
+      const res = await fetchHistoryApi(p);
       if (res.ok) {
         const data = await res.json();
         setHistory(data.history || []);
@@ -152,11 +57,7 @@ export default function Home() {
     setAuthError(null);
     setIsVerifying(true);
     try {
-      const res = await fetch("/api/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ passcode }),
-      });
+      const res = await authApi(passcode);
       if (res.ok) {
         sessionStorage.setItem("app_passcode", passcode);
         setIsAuthenticated(true);
@@ -194,11 +95,7 @@ export default function Home() {
 
     try {
       const p = passcode || sessionStorage.getItem("app_passcode");
-      const res = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: targetUrl, passcode: p }),
-      });
+      const res = await analyzeApi(targetUrl, p);
 
       const data = await res.json();
 
@@ -272,12 +169,30 @@ export default function Home() {
   let pCog = 0, pHeu = 0;
   let finalCalculatedScore = 0;
 
-  if (result) {
-    cCog = Math.max(0, 100 - (result.carga_cognitiva?.nivel_esfuerzo || 0));
+  let facilidad = { nivel_facilidad: 0, semaforo: 'bajo' as "bajo" | "medio" | "alto", factores: [] as string[] };
 
-    if (result.puntajes_categorias) {
+  if (result) {
+    if (result.facilidad_cognitiva) {
+      const p = result.facilidad_cognitiva.nivel_facilidad;
+      facilidad = { 
+        ...result.facilidad_cognitiva,
+        semaforo: p >= 8 ? 'alto' : p >= 6 ? 'medio' : 'bajo'
+      };
+      cCog = facilidad.nivel_facilidad * 10;
+    } else if (result.carga_cognitiva) {
+      const p = Math.max(0, Math.round((100 - result.carga_cognitiva.nivel_esfuerzo) / 10));
+      facilidad = {
+        nivel_facilidad: p,
+        semaforo: p >= 8 ? 'alto' : p >= 6 ? 'medio' : 'bajo',
+        factores: result.carga_cognitiva.factores || []
+      };
+      cCog = Math.max(0, 100 - result.carga_cognitiva.nivel_esfuerzo);
+    }
+
+    if (result.puntajes_categorias?.heuristicas !== undefined) {
       cHeu = result.puntajes_categorias.heuristicas;
     } else {
+      // Fallback para registros antiguos en la base de datos
       const heurs = result.evaluacion_heuristicas || [];
       let sum = 0;
       heurs.forEach(h => sum += (h.puntuacion || 0));
@@ -287,7 +202,7 @@ export default function Home() {
     pCog = Math.round(cCog * 0.50);
     pHeu = Math.round(cHeu * 0.50);
 
-    finalCalculatedScore = result.puntaje_global || (pCog + pHeu);
+    finalCalculatedScore = result.puntaje_global !== undefined ? result.puntaje_global : (pCog + pHeu);
   }
 
   if (!isAuthenticated) {
@@ -501,7 +416,7 @@ export default function Home() {
 
                     <div className="bg-slate-50 p-3 rounded-lg mb-4 text-center border border-slate-100">
                       <p className="text-xs font-semibold text-slate-700 mb-1">Fórmula Matemática</p>
-                      <p className="text-[10px] text-slate-500 font-mono">PG = (Carga Cognitiva × 0.5) + (Heurísticas × 0.5)</p>
+                      <p className="text-[10px] text-slate-500 font-mono">PG = (Facilidad Cognitiva × 0.5) + (Heurísticas × 0.5)</p>
                     </div>
 
                     <div className="flex flex-col gap-5 mt-2">
@@ -531,30 +446,30 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Cognitive Load Widget */}
+                  {/* Facilidad Cognitiva Widget */}
                   <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
-                    <h2 className="text-sm font-bold text-slate-600 uppercase tracking-wider mb-6 text-center">Carga Cognitiva</h2>
+                    <h2 className="text-sm font-bold text-slate-600 uppercase tracking-wider mb-6 text-center">Facilidad Cognitiva</h2>
 
                     <div className="flex justify-between items-end mb-2">
-                      <span className="text-xs font-semibold text-slate-500">Nivel de Esfuerzo</span>
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-md border ${result.carga_cognitiva.semaforo === 'bajo' ? 'border-green-200 text-green-700 bg-green-50' : result.carga_cognitiva.semaforo === 'medio' ? 'border-yellow-200 text-yellow-700 bg-yellow-50' : 'border-red-200 text-red-700 bg-red-50'} uppercase tracking-wide`}>
-                        {result.carga_cognitiva.semaforo === 'bajo' ? 'Bajo' : result.carga_cognitiva.semaforo === 'medio' ? 'Medio' : 'Alto'}
+                      <span className="text-xs font-semibold text-slate-500">Nivel de Facilidad</span>
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-md border ${facilidad.semaforo === 'alto' ? 'border-green-200 text-green-700 bg-green-50' : facilidad.semaforo === 'medio' ? 'border-yellow-200 text-yellow-700 bg-yellow-50' : 'border-red-200 text-red-700 bg-red-50'} uppercase tracking-wide`}>
+                        {facilidad.semaforo === 'alto' ? 'Alto' : facilidad.semaforo === 'medio' ? 'Medio' : 'Bajo'}
                       </span>
                     </div>
 
                     <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden flex mb-6 shadow-inner">
                       <div
-                        style={{ width: `${result.carga_cognitiva.nivel_esfuerzo}%` }}
-                        className={`h-full transition-all duration-1000 ease-out ${result.carga_cognitiva.semaforo === 'bajo' ? 'bg-green-500' : result.carga_cognitiva.semaforo === 'medio' ? 'bg-yellow-500' : 'bg-red-500'}`}
+                        style={{ width: `${Math.min(100, facilidad.nivel_facilidad * 10)}%` }}
+                        className={`h-full transition-all duration-1000 ease-out ${facilidad.semaforo === 'alto' ? 'bg-green-500' : facilidad.semaforo === 'medio' ? 'bg-yellow-500' : 'bg-red-500'}`}
                       />
                     </div>
 
-                    {result.carga_cognitiva.factores && result.carga_cognitiva.factores.length > 0 && (
+                    {facilidad.factores && facilidad.factores.length > 0 && (
                       <div className="flex flex-col gap-2">
                         <span className="text-xs font-semibold text-slate-500 uppercase">Factores Detectados</span>
                         <div className="flex flex-col gap-3">
-                          {result.carga_cognitiva.factores.map((factor, i) => (
-                            <FactorCard key={i} factorStr={factor} semaforo={result.carga_cognitiva.semaforo} onOpen={setSelectedFactor} />
+                          {facilidad.factores.map((factor, i) => (
+                            <FactorCard key={i} factorStr={factor} semaforo={facilidad.semaforo} onOpen={setSelectedFactor} />
                           ))}
                         </div>
                       </div>
