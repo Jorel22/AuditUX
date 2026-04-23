@@ -416,9 +416,15 @@ export default function Home() {
                   <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col">
                     <h2 className="text-sm font-bold text-slate-600 uppercase tracking-wider mb-2 text-center">¿Cómo se calculó este puntaje?</h2>
 
-                    <div className="bg-slate-50 p-3 rounded-lg mb-4 text-center border border-slate-100">
-                      <p className="text-xs font-semibold text-slate-700 mb-1">Fórmula Matemática</p>
-                      <p className="text-[10px] text-slate-500 font-mono">PG = (Facilidad Cognitiva × 0.5) + (Heurísticas × 0.5)</p>
+                    <div className="bg-slate-50 p-3 rounded-lg mb-4 text-left border border-slate-100 space-y-2">
+                      <div>
+                        <p className="text-[11px] font-semibold text-slate-700 mb-0.5">Puntaje Global</p>
+                        <p className="text-[10px] text-slate-500 font-sans leading-snug">Promedio entre la Facilidad Cognitiva y el Puntaje de Heurísticas</p>
+                      </div>
+                      <div className="border-t border-slate-200/60 pt-2">
+                        <p className="text-[11px] font-semibold text-slate-700 mb-0.5">Puntaje de Heurísticas</p>
+                        <p className="text-[10px] text-slate-500 font-sans leading-snug">Promedio de las 5 métricas evaluadas</p>
+                      </div>
                     </div>
 
                     <div className="flex flex-col gap-5 mt-2">
