@@ -210,10 +210,7 @@ export default function Home() {
       <div className="min-h-screen bg-[#e9eff5] text-slate-900 font-sans flex flex-col items-center justify-center p-4">
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 w-full max-w-md">
           <div className="flex items-center gap-2 mb-6 justify-center">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold italic text-xl">
-              U
-            </div>
-            <span className="font-bold text-2xl tracking-tight">AuditUX</span>
+            <AuditUXLogo className="h-10 w-auto" />
           </div>
           <h2 className="text-xl font-bold text-center mb-6 text-slate-800">Acceso Restringido</h2>
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
@@ -260,10 +257,7 @@ export default function Home() {
       {/* Header */}
       <header className="print:hidden flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-md z-10 border-b border-slate-200 shrink-0">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold italic">
-            U
-          </div>
-          <span className="font-bold text-xl tracking-tight">AuditUX</span>
+          <AuditUXLogo className="h-8 w-auto" />
         </div>
         <button onClick={handleLogout} className="text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors">
           Cerrar Sesión
@@ -320,7 +314,7 @@ export default function Home() {
 
           <div className="print:hidden flex flex-col items-center justify-center mb-10 w-full max-w-3xl mx-auto">
             <AuditUXLogo className="h-28 md:h-36 w-auto" />
-            <p className="text-slate-500 font-medium text-sm sm:text-base -mt-4 md:-mt-6 tracking-wide text-center relative z-10">Optimiza tu interfaz, maximiza tu impacto</p>
+            <p className="text-slate-500 font-medium text-sm sm:text-base mt-2 md:mt-4 tracking-wide text-center relative z-10">Optimiza tu interfaz, maximiza tu impacto</p>
           </div>
 
           <div className="print:hidden w-full max-w-3xl mb-8">
