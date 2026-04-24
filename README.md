@@ -1,7 +1,7 @@
 
 ![logo auditux](logo-auditux.svg)
 
-AuditUX es una herramienta avanzada de auditoría de experiencia de usuario que automatiza el análisis usabilidad de interfaces web utilizando Inteligencia Artificial. A través de la [Teoria de Carga Cognitiva](https://www.sciencedirect.com/science/article/abs/pii/0364021388900237) y de 5 [Heurísticas de Usabilidad de Nielsen](https://www.nngroup.com/articles/ten-usability-heuristics/), la aplicación evalúa URLs y proporciona un diagnóstico detallado con puntuaciones y recomendaciones de mejora.
+AuditUX es una herramienta avanzada de auditoría de experiencia de usuario que automatiza el análisis usabilidad de interfaces web utilizando Inteligencia Artificial. A través de la [Teoria de Carga Cognitiva de Sweller](https://www.sciencedirect.com/science/article/abs/pii/0364021388900237) y de 5 [Heurísticas de Usabilidad de Nielsen](https://www.nngroup.com/articles/ten-usability-heuristics/), la aplicación evalúa URLs y proporciona un diagnóstico detallado con puntuaciones y recomendaciones de mejora.
 
 ## ✨ Características Principales
 
